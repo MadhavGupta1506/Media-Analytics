@@ -1,11 +1,11 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,timezone
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-
+import os
 from . import models, database
 
 # Config (should ideally come from .env)
@@ -29,7 +29,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # -------- JWT Utils --------
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -61,12 +61,10 @@ async def get_current_user(
     return user
 
 
-# -------- Stream Tokens (sync, short-lived) --------
-def create_stream_token(media_id: str) -> str:
-    expire = datetime.utcnow() + timedelta(hours=1)
-    to_encode = {"media_id": media_id, "exp": expire}
+def create_stream_token(media_id: str, expires_delta: timedelta | None = None) -> str:
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(seconds=int(os.getenv("STREAM_TOKEN_EXPIRE_SECONDS", "600"))))
+    to_encode = {"media_id": str(media_id), "exp": expire}
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
 
 def verify_stream_token(token: str) -> str:
     try:

@@ -40,7 +40,7 @@ class MediaOut(MediaBase):
     file_url: str
     created_at: datetime
 
-    class Config:
+    class from_attributes:
         orm_mode = True
 
 class StreamURL(BaseModel):

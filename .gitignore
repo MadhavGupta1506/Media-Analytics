@@ -1,3 +1,5 @@
 /venv
 .media_platform.db
 /uploads
+.env.example
+.env

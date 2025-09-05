@@ -1,6 +1,6 @@
 # Media Platform API
 
-A FastAPI-based media platform API that allows users to upload, stream, and manage media assets (videos and audio). The API includes authentication, media upload, streaming with secure URLs, and analytics for media views.
+A FastAPI-based media platform API that allows users to upload, stream, and manage media assets (videos and audio). The API includes authentication, media upload, streaming with secure URLs, analytics for media views, and Redis-based caching and rate limiting.
 
 ## Features
 
@@ -9,7 +9,9 @@ A FastAPI-based media platform API that allows users to upload, stream, and mana
 - **Secure Streaming**: Generate secure stream URLs for media access
 - **Analytics**: Track media views with IP logging and daily statistics
 - **Async Database**: Uses SQLAlchemy with async support and SQLite for development
+- **Redis Caching**: Redis integration for improved performance and rate limiting
 - **Admin Users**: Role-based access for media management
+- **Rate Limiting**: Built-in rate limiting to prevent abuse
 
 ## Project Structure
 
@@ -21,14 +23,24 @@ A FastAPI-based media platform API that allows users to upload, stream, and mana
 │   ├── models.py            # SQLAlchemy models (AdminUser, MediaAsset, MediaViewLog)
 │   ├── schemas.py           # Pydantic schemas for request/response validation
 │   ├── security.py          # Authentication and JWT utilities
+│   ├── redis_client.py      # Redis client configuration and connection
 │   ├── routers/
 │   │   ├── auth.py          # Authentication endpoints (signup, login)
 │   │   └── media.py         # Media management endpoints
-│   └── utils/
-│       └── streaming.py     # Streaming utilities
+│   ├── utils/
+│   │   ├── rate_limit.py    # Rate limiting utilities
+│   │   └── cache.py         # Caching utilities
+│   └── tests/
+│       ├── conftest.py      # Test configuration
+│       └── test_media.py    # Media endpoint tests
 ├── uploads/                 # Directory for uploaded media files
+├── .env                     # Environment variables (created from .env.example)
+├── .env.example             # Environment variables template
 ├── media_platform.db        # SQLite database file
 ├── requirements.txt         # Python dependencies
+├── pytest.ini              # Pytest configuration
+├── docker-compose.yml      # Docker Compose configuration
+├── Dockerfile              # Docker container configuration
 └── README.md               # This file
 ```
 
@@ -54,9 +66,16 @@ A FastAPI-based media platform API that allows users to upload, stream, and mana
      ```
 
 4. **Install dependencies**:
+
    ```bash
    pip install -r requirements.txt
    ```
+
+5. **Set up environment variables**:
+   ```bash
+   cp .env.example .env
+   ```
+   Edit the `.env` file with your configuration values (Redis URL, database URL, secret key, etc.).
 
 ## Running the Application
 
@@ -95,13 +114,37 @@ A FastAPI-based media platform API that allows users to upload, stream, and mana
 
 The application uses SQLite for development (`media_platform.db`). On startup, the database tables are automatically created if they don't exist.
 
-For production, you can switch to PostgreSQL by updating the `DATABASE_URL` in `app/database.py`.
+For production, you can switch to PostgreSQL by updating the `DATABASE_URL` environment variable in your `.env` file.
+
+## Redis
+
+The application uses Redis for caching and rate limiting. Redis connection is configured via the `REDIS_URL` environment variable.
+
+### Running Redis Locally
+
+You can run Redis using Docker:
+
+```bash
+docker run -d -p 6379:6379 redis:7-alpine
+```
+
+Or use the provided Docker Compose setup:
+
+```bash
+docker-compose up redis
+```
 
 ## Configuration
 
-- **JWT Secret Key**: Currently hardcoded in `app/security.py`. For production, use environment variables.
+Environment variables are loaded from the `.env` file:
+
+- **DATABASE_URL**: Database connection string (default: SQLite)
+- **REDIS_URL**: Redis connection URL (required for Redis features)
+- **SECRET_KEY**: JWT secret key for token signing
+- **STREAM_TOKEN_EXPIRE_SECONDS**: Stream token expiration time (default: 600 seconds)
+
 - **Upload Directory**: Media files are stored in the `uploads/` directory.
-- **Token Expiration**: Access tokens expire after 30 minutes, stream tokens after 1 hour.
+- **Token Expiration**: Access tokens expire after 30 minutes, stream tokens after 10 minutes (configurable).
 
 ## Security Notes
 

@@ -1,8 +1,18 @@
-fastapi
+# caching & redis
+redis>=4.5.0
+
+# async test client
+httpx[http2]==0.24.1
+pytest==7.4.0
+pytest-asyncio==0.21.0
+pytest-cov==4.1.0
+# for running in container (already present)
 uvicorn[standard]
-sqlalchemy[asyncio]
-databases[sqlite]
-pydantic
-python-jose[cryptography]
+fastapi
+sqlalchemy>=1.4
+alembic
+python-dotenv
 passlib[bcrypt]
+python-jose
+python-multipart
 aiofiles
