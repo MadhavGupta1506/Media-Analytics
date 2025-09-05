@@ -1,2 +1,3 @@
 /venv
-media_platform.db
+.media_platform.db
+/uploads
