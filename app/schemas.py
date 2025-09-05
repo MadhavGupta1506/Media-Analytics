@@ -42,3 +42,14 @@ class MediaOut(MediaBase):
 
     class Config:
         orm_mode = True
+
+class StreamURL(BaseModel):
+    stream_url: str
+    
+
+# -------- Analytics Schemas --------
+class AnalyticsData(BaseModel):
+    media_id: int
+    total_views: int
+    unique_viewers: int
+    average_watch_time: float  # in seconds 
